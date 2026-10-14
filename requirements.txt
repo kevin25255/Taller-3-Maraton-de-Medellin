@@ -1,0 +1,12 @@
+﻿
+# TALLER 3 - MINI-LAKEHOUSE
+# Dependencias propuestas por la guía del profesor.
+# Motor analítico para consultar los archivos Parquet.
+duckdb>=1.4,<2.0
+# Procesamiento de datos y limpieza.
+pandas>=2.2,<3.0
+# Conexión de Python con PostgreSQL.
+sqlalchemy>=2.0,<3.0
+psycopg2-binary>=2.9,<3.0
+# Lectura y escritura de archivos Parquet.
+pyarrow>=20,<24
