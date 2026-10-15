@@ -32,7 +32,7 @@ SEMILLA = 20261014
 
 
 def generar_csv():
-    """Reproduce el escenario anterior; genera SOLO cuando faltan los tres CSV."""
+    """Genera las ediciones 2016–2026 con pasos RFID cuando no existen los CSV."""
     print('No hay CSV históricos. Generando conjunto completo con semilla fija...')
     DATA.mkdir(parents=True, exist_ok=True)
     rng = random.Random(SEMILLA)
@@ -56,19 +56,19 @@ def generar_csv():
                 for numero in range(1, cantidad + 1):
                     wp.writerow([pid, f'CHIP-{edicion}-{categoria}-{numero:04d}',
                                  f'Corredor_{edicion}_{categoria}_{numero:04d}', categoria, edicion])
-                    if edicion != 2026:
-                        ritmo_base = rng.uniform(4.0, 7.0)
-                        fatiga = rng.uniform(0.01, 0.06)
-                        tiempo = 0
-                        anterior = 0
-                        for indice, (punto_id, _, distancia) in enumerate(PUNTOS[:cantidad_puntos]):
-                            ritmo = (ritmo_base * factor_edicion * (1 + fatiga * indice)
-                                     * rng.uniform(0.97, 1.03))
-                            tiempo += int(ritmo * 60 * (distancia - anterior))
-                            fecha = inicio + timedelta(seconds=tiempo)
-                            ws.writerow([pid, punto_id, tiempo, fecha.strftime('%Y-%m-%d %H:%M:%S')])
-                            total_pasos += 1
-                            anterior = distancia
+
+                    ritmo_base = rng.uniform(4.0, 7.0)
+                    fatiga = rng.uniform(0.01, 0.06)
+                    tiempo = 0
+                    anterior = 0
+                    for indice, (punto_id, _, distancia) in enumerate(PUNTOS[:cantidad_puntos]):
+                        ritmo = (ritmo_base * factor_edicion * (1 + fatiga * indice)
+                                 * rng.uniform(0.97, 1.03))
+                        tiempo += int(ritmo * 60 * (distancia - anterior))
+                        fecha = inicio + timedelta(seconds=tiempo)
+                        ws.writerow([pid, punto_id, tiempo, fecha.strftime('%Y-%m-%d %H:%M:%S')])
+                        total_pasos += 1
+                        anterior = distancia
                     pid += 1
     print(f'Generados: {pid - 1:,} participantes; {total_pasos:,} pasos.')
 
@@ -112,25 +112,52 @@ def conectar():
     )
 
 
+
 def comprobar_integridad(cur):
-    cur.execute('''
-        SELECT COUNT(*) FROM pasos s
-        JOIN participantes p ON p.id_participante=s.id_participante
-        WHERE p.edicion=2026
-    ''')
-    if cur.fetchone()[0]:
-        raise ValueError('Se encontraron pasos de la edición 2026, que debía tener solo inscritos.')
-    cur.execute('''
-        SELECT COUNT(*) FROM (
-          SELECT id_participante, id_punto, tiempo_acumulado_segundos,
-                 LAG(tiempo_acumulado_segundos) OVER (
-                   PARTITION BY id_participante ORDER BY id_punto) AS tiempo_anterior
-          FROM pasos
-        ) x WHERE tiempo_anterior IS NOT NULL
-              AND tiempo_acumulado_segundos <= tiempo_anterior
-    ''')
-    if cur.fetchone()[0]:
-        raise ValueError('Existen tiempos acumulados que no aumentan entre checkpoints.')
+    # Verificar que las once ediciones tengan registros RFID.
+    cur.execute("""
+        SELECT p.edicion, COUNT(*)
+        FROM pasos s
+        JOIN participantes p
+          ON p.id_participante = s.id_participante
+        GROUP BY p.edicion
+        ORDER BY p.edicion
+    """)
+
+    conteos = dict(cur.fetchall())
+
+    for edicion in range(2016, 2027):
+        esperado = 60000 if edicion == 2026 else 52500
+
+        if conteos.get(edicion) != esperado:
+            raise ValueError(
+                f'Edición {edicion}: se esperaban '
+                f'{esperado} pasos y se encontraron '
+                f'{conteos.get(edicion, 0)}.'
+            )
+
+    # Verificar que los tiempos aumenten entre checkpoints.
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM (
+            SELECT
+                id_participante,
+                tiempo_acumulado_segundos,
+                LAG(tiempo_acumulado_segundos) OVER (
+                    PARTITION BY id_participante
+                    ORDER BY id_punto
+                ) AS tiempo_anterior
+            FROM pasos
+        ) x
+        WHERE tiempo_anterior IS NOT NULL
+          AND tiempo_acumulado_segundos <= tiempo_anterior
+    """)
+
+    if cur.fetchone()[0] > 0:
+        raise ValueError(
+            'Existen tiempos acumulados que no aumentan '
+            'entre checkpoints.'
+        )
 
 
 def cargar_postgres(con, esperados):
