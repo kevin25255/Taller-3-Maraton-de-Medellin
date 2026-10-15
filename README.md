@@ -60,13 +60,13 @@ Utilizaremos **SCD Tipo 2 en `DIM_CHECKPOINT`**, porque nos permite conservar lo
 
 Para demostrarlo, simularemos que el checkpoint K30 cambia su nombre a KM30 en la edición 2026, manteniendo su distancia de 30 km.
 
-| id_punto | nombre | distancia_km | Ediciones |
-|---|---|---|---|
-| 5 | K30 | 30.0 | 2016–2025 |
-| 5 | KM30 | 30.0 | 2026 |
+| checkpoint_sk | id_punto | nombre | distancia_km | valido_desde | valido_hasta | activo | Ediciones asociadas |
+|---|---|---|---|---|---|---|---|
+| 5 | 5 | K30 | 30.0 | 2016-01-01 | 2025-12-31 | false | 2016–2025 |
+| 6 | 5 | KM30 | 30.0 | 2026-01-01 | 9999-12-31 | true | 2026 |
 
-En la zona Gold guardaremos ambas versiones con diferentes claves sustitutas y sus respectivas fechas de vigencia. Cada registro RFID se relacionará con la versión que corresponda a su edición.
+En la zona Gold guardaremos ambas versiones con diferentes claves sustitutas (`checkpoint_sk`) y sus respectivas fechas de vigencia (`valido_desde`, `valido_hasta`) y estado (`activo`). Cada registro en `FACT_PASOS_RFID` se relacionará con la clave sustituta de la versión que corresponda a su edición.
 
-De esta manera podremos comprobar que los pasos de las ediciones anteriores permanecen relacionados con K30, mientras que los de 2026 se relacionan con KM30.
+De esta manera podremos comprobar que los pasos de las ediciones anteriores (2016–2025) permanecen relacionados con K30 (`checkpoint_sk = 5`), mientras que los de 2026 se relacionan con KM30 (`checkpoint_sk = 6`).
 
-Este cambio será únicamente una simulación para demostrar SCD Tipo 2. Los datos originales de PostgreSQL no se modificarán.
+Este cambio será únicamente una simulación en la capa analítica para demostrar SCD Tipo 2. Los datos originales de PostgreSQL no se modificarán.
