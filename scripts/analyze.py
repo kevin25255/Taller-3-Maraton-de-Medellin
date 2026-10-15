@@ -34,7 +34,7 @@ def main():
         # Registrar vistas sobre los archivos Parquet de la Zona Gold
         for tabla in ['fact_pasos_rfid', 'dim_tiempo', 'dim_edicion', 'dim_corredor', 'dim_checkpoint']:
             ruta = str((GOLD / f'{tabla}.parquet').as_posix())
-            con.execute(f"CREATE VIEW {tabla} AS SELECT * FROM read_parquet('{ruta}')")
+            con.execute(f"CREATE TABLE {tabla} AS SELECT * FROM read_parquet('{ruta}')")
 
         # Q1: Comparación histórica entre las 11 ediciones (2016 a 2026)
         q1 = """
