@@ -1,0 +1,11 @@
+=== REPORTE DE CALIDAD SILVER ===
+Filas Bronze originales (pasos) :    585,000
+Filas Silver resultantes (pasos):    585,000
+Filas eliminadas                :          0
+Duplicados RFID eliminados      :          0
+Nulos resueltos                 : 0 -> 0
+Porcentaje retenido             :    100.00%
+Participantes válidos en Silver :    165,000
+Checkpoints válidos en Silver   :          6
+Rango de fechas de pasos        : 2016-09-01 07:20:03 -> 2026-09-01 12:52:40
+Tiempo acumulado promedio (seg) :   5,183.47
