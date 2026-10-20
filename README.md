@@ -1,11 +1,5 @@
 # Mini-Lakehouse: Maratón de Medellín (Ediciones 2016–2026)
 
-**Asignatura:** Tópicos Avanzados de Bases de Datos — Taller 3 (Del Operacional al Analítico)  
-**Institución:** Institución Universitaria ITM  
-**Profesor:** Roberto Carlos Rahamut Suteu  
-**Equipo 5:** Yenifer Foronda · Kevin Castaño · Jerónimo Casas  
-
----
 
 ## 1. Diseño dimensional
 
